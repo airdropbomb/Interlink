@@ -61,17 +61,27 @@ class Interlink:
         except json.JSONDecodeError:
             return []
     
-    def save_accounts(self, accounts):
+    def save_accounts(self, new_accounts):
         filename = "accounts.json"
         try:
             if not os.path.exists(filename):
-                self.log(f"{Fore.RED}File {filename} Not Found.{Style.RESET_ALL}")
+                with open(filename, 'w') as file:
+                    json.dump(new_accounts, file, indent=4)
                 return
-            
+
+            with open(filename, 'r') as file:
+                existing_accounts = json.load(file)
+
+            if isinstance(existing_accounts, list):
+                existing_accounts.extend(new_accounts)
+            else:
+                existing_accounts = new_accounts
+
             with open(filename, 'w') as file:
-                json.dump(accounts, file, indent=4)
+                json.dump(existing_accounts, file, indent=4)
+
         except Exception as e:
-            return None
+            return []
     
     async def load_proxies(self, use_proxy_choice: int):
         filename = "proxy.txt"
@@ -142,6 +152,24 @@ class Interlink:
     def print_question(self):
         while True:
             try:
+                print(f"{Fore.WHITE + Style.BRIGHT}1. Add Account in accounts.json{Style.RESET_ALL}")
+                print(f"{Fore.WHITE + Style.BRIGHT}2. Use Current accounts.json{Style.RESET_ALL}")
+                runner = int(input(f"{Fore.BLUE + Style.BRIGHT}Choose [1/2] -> {Style.RESET_ALL}").strip())
+
+                if runner in [1, 2]:
+                    run_type = (
+                        "Add Account in " if runner == 1 else 
+                        "Use Current"
+                    )
+                    print(f"{Fore.GREEN + Style.BRIGHT}{run_type} accounts.json Selected.{Style.RESET_ALL}")
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter either 1 or 2.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number (1 or 2).{Style.RESET_ALL}")
+
+        while True:
+            try:
                 print(f"{Fore.WHITE + Style.BRIGHT}1. Run With Monosans Proxy{Style.RESET_ALL}")
                 print(f"{Fore.WHITE + Style.BRIGHT}2. Run With Private Proxy{Style.RESET_ALL}")
                 print(f"{Fore.WHITE + Style.BRIGHT}3. Run Without Proxy{Style.RESET_ALL}")
@@ -154,11 +182,13 @@ class Interlink:
                         "Run Without Proxy"
                     )
                     print(f"{Fore.GREEN + Style.BRIGHT}{proxy_type} Selected.{Style.RESET_ALL}")
-                    return choose
+                    break
                 else:
                     print(f"{Fore.RED + Style.BRIGHT}Please enter either 1, 2 or 3.{Style.RESET_ALL}")
             except ValueError:
                 print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number (1, 2 or 3).{Style.RESET_ALL}")
+
+        return runner, choose
     
     def login_question(self):
         while True:
@@ -293,49 +323,51 @@ class Interlink:
                     continue
                 return None
         
-    async def process_get_accounts(self, use_proxy: bool):
-        accounts = self.load_accounts()
-        if not accounts:
-            proxy = self.get_next_proxy_for_account(email) if use_proxy else None
+    async def process_add_accounts(self, use_proxy: bool):
+        accounts = []
 
-            print(f"{Fore.YELLOW + Style.BRIGHT}No Accounts Found. Start Setting Up With Proxy {proxy}{Style.RESET_ALL}")
-            await asyncio.sleep(1)
+        interlink_id, passcode, email = self.login_question()
 
-            interlink_id, passcode, email = self.login_question()
+        proxy = self.get_next_proxy_for_account(email) if use_proxy else None
 
-            print(f"{Fore.YELLOW + Style.BRIGHT}Try To Sending OTP...{Style.RESET_ALL}", end="\r", flush=True)
+        print(f"{Fore.YELLOW + Style.BRIGHT}Start Setting Up With Proxy {proxy}{Style.RESET_ALL}")
+        await asyncio.sleep(1)
 
-            send_otp = await self.send_otp(interlink_id, passcode, email, proxy)
-            if not send_otp:
-                return []
-            
-            print(f"{Fore.GREEN + Style.BRIGHT}Sending OTP Success, Check Your Email{Style.RESET_ALL}")
-            await asyncio.sleep(1)
+        print(f"{Fore.YELLOW + Style.BRIGHT}Try To Sending OTP...{Style.RESET_ALL}", end="\r", flush=True)
+        await asyncio.sleep(1)
+
+        send_otp = await self.send_otp(interlink_id, passcode, email, proxy)
+        if not send_otp:
+            return []
         
-            while True:
-                try:
-                    otp = int(input(f"{Fore.WHITE + Style.BRIGHT}Enter 6 Digits OTP -> {Style.RESET_ALL}").strip())
-                    if len(str(otp)) == 6:
-                        break
-                    else:
-                        print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
-                except ValueError:
-                    print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+        print(f"{Fore.GREEN + Style.BRIGHT}Sending OTP Success, Check Your Email{Style.RESET_ALL}")
+        await asyncio.sleep(1)
+    
+        while True:
+            try:
+                otp = int(input(f"{Fore.WHITE + Style.BRIGHT}Enter 6 Digits OTP -> {Style.RESET_ALL}").strip())
+                if len(str(otp)) == 6:
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
 
-            print(f"{Fore.YELLOW + Style.BRIGHT}Verifying OTP...{Style.RESET_ALL}", end="\r", flush=True)
+        print(f"{Fore.YELLOW + Style.BRIGHT}Verifying OTP...{Style.RESET_ALL}", end="\r", flush=True)
+        await asyncio.sleep(1)
 
-            token = await self.verify_otp(interlink_id, otp, proxy)
-            if not token:
-                return []
+        token = await self.verify_otp(interlink_id, otp, proxy)
+        if not token:
+            return []
 
-            accounts.append({"InterlinkID":interlink_id, "Passcode":passcode, "Email":email, "Token":token})
+        accounts.append({"InterlinkID":interlink_id, "Passcode":passcode, "Email":email, "Token":token})
 
-            self.save_accounts(accounts)
+        self.save_accounts(accounts)
 
-            print(f"{Fore.GREEN + Style.BRIGHT}Verifying OTP Success, Your Data Has Been Saved in accounts.json{Style.RESET_ALL}")
-            await asyncio.sleep(3)
+        print(f"{Fore.GREEN + Style.BRIGHT}Verifying OTP Success, Your Data Has Been Saved in accounts.json{Style.RESET_ALL}")
+        await asyncio.sleep(3)
 
-        return accounts
+        return True
     
     async def process_accounts(self, email: str, token: str, use_proxy: bool):
         proxy = self.get_next_proxy_for_account(email) if use_proxy else None
@@ -415,7 +447,7 @@ class Interlink:
         
     async def main(self):
         try:
-            use_proxy_choice = self.print_question()
+            runnner, use_proxy_choice = self.print_question()
 
             use_proxy = False
             if use_proxy_choice in [1, 2]:
@@ -424,8 +456,12 @@ class Interlink:
             if use_proxy:
                 await self.load_proxies(use_proxy_choice)
 
-            accounts = await self.process_get_accounts(use_proxy)
+            if runnner == 1:
+                await self.process_add_accounts(use_proxy)
+
+            accounts = self.load_accounts()
             if not accounts:
+                print(f"{Fore.YELLOW + Style.BRIGHT}No Accounts Loaded{Style.RESET_ALL}")
                 return
             
             while True:

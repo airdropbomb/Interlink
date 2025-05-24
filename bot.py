@@ -192,24 +192,18 @@ class Interlink:
     
     def login_question(self):
         while True:
-            try:
-                interlink_id = int(input(f"{Fore.WHITE + Style.BRIGHT}Enter Interlink ID [ without xxxx@ ] -> {Style.RESET_ALL}").strip())
-                if interlink_id:
-                    break
-                else:
-                    print(f"{Fore.RED + Style.BRIGHT}Please enter a positive number.{Style.RESET_ALL}")
-            except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+            interlink_id = input(f"{Fore.WHITE + Style.BRIGHT}Enter Interlink ID [ without xxxx@ ] -> {Style.RESET_ALL}").strip()
+            if interlink_id:
+                break
+            else:
+                print(f"{Fore.RED + Style.BRIGHT}Please enter a positive number.{Style.RESET_ALL}")
 
         while True:
-            try:
-                passcode = int(input(f"{Fore.WHITE + Style.BRIGHT}Enter Your 6 Digits Passcode         -> {Style.RESET_ALL}").strip())
-                if len(str(passcode)) == 6:
-                    break
-                else:
-                    print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
-            except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+            passcode = input(f"{Fore.WHITE + Style.BRIGHT}Enter Your 6 Digits Passcode         -> {Style.RESET_ALL}").strip()
+            if len(passcode) == 6:
+                break
+            else:
+                print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
 
         while True:
             try:
@@ -223,9 +217,9 @@ class Interlink:
 
         return interlink_id, passcode, email
             
-    async def send_otp(self, interlink_id: int, passcode: int, email: str, proxy=None, retries=5):
+    async def send_otp(self, interlink_id: str, passcode: str, email: str, proxy=None, retries=5):
         url = f"{self.BASE_API}/auth/send-otp-email-verify-login"
-        payload = {"loginId":interlink_id, "passcode":passcode, "email":email}
+        payload = {"loginId":int(interlink_id), "passcode":int(passcode), "email":email}
         for attempt in range(retries):
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
@@ -243,9 +237,9 @@ class Interlink:
                     f"{Fore.YELLOW + Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
                 )
             
-    async def verify_otp(self, interlink_id: int, otp: int, proxy=None, retries=5):
+    async def verify_otp(self, interlink_id: str, otp: str, proxy=None, retries=5):
         url = f"{self.BASE_API}/auth/check-otp-email-verify-login"
-        payload = {"loginId":interlink_id, "otp":otp}
+        payload = {"loginId":int(interlink_id), "otp":int(otp)}
         for attempt in range(retries):
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
@@ -344,14 +338,11 @@ class Interlink:
         await asyncio.sleep(1)
     
         while True:
-            try:
-                otp = int(input(f"{Fore.WHITE + Style.BRIGHT}Enter 6 Digits OTP -> {Style.RESET_ALL}").strip())
-                if len(str(otp)) == 6:
-                    break
-                else:
-                    print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
-            except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+            otp = input(f"{Fore.WHITE + Style.BRIGHT}Enter 6 Digits OTP -> {Style.RESET_ALL}").strip()
+            if len(otp) == 6:
+                break
+            else:
+                print(f"{Fore.RED + Style.BRIGHT}Please enter 6 digits number.{Style.RESET_ALL}")
 
         print(f"{Fore.YELLOW + Style.BRIGHT}Verifying OTP...{Style.RESET_ALL}", end="\r", flush=True)
         await asyncio.sleep(1)

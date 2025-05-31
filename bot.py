@@ -60,7 +60,7 @@ class Interlink:
                 return []
         except json.JSONDecodeError:
             return []
-    
+
     def save_accounts(self, new_accounts):
         filename = "accounts.json"
         try:
@@ -69,8 +69,11 @@ class Interlink:
                     json.dump(new_accounts, file, indent=4)
                 return
 
-            with open(filename, 'r') as file:
-                existing_accounts = json.load(file)
+            if os.path.getsize(filename) == 0:
+                existing_accounts = []
+            else:
+                with open(filename, 'r') as file:
+                    existing_accounts = json.load(file)
 
             if isinstance(existing_accounts, list):
                 existing_accounts.extend(new_accounts)

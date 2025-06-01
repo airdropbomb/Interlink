@@ -13,6 +13,7 @@ wib = pytz.timezone('Asia/Jakarta')
 class Interlink:
     def __init__(self) -> None:
         self.headers = {
+            "Accept-Encoding": "*/*",
             "User-Agent": "okhttp/4.12.0",
             "Accept-Encoding": "gzip"
         }
@@ -222,12 +223,17 @@ class Interlink:
             
     async def send_otp(self, interlink_id: str, passcode: str, email: str, proxy=None, retries=5):
         url = f"{self.BASE_API}/auth/send-otp-email-verify-login"
-        payload = {"loginId":int(interlink_id), "passcode":int(passcode), "email":email}
+        data = json.dumps({"loginId":int(interlink_id), "passcode":int(passcode), "email":email})
+        headers = {
+            **self.headers,
+            "Content-Length": str(len(data)),
+            "Content-Type": "application/json"
+        }
         for attempt in range(retries):
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.post(url=url, headers=self.headers, json=payload) as response:
+                    async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                         response.raise_for_status()
                         result = await response.json()
                         return result["data"]["success"]
@@ -242,12 +248,17 @@ class Interlink:
             
     async def verify_otp(self, interlink_id: str, otp: str, proxy=None, retries=5):
         url = f"{self.BASE_API}/auth/check-otp-email-verify-login"
-        payload = {"loginId":int(interlink_id), "otp":int(otp)}
+        data = json.dumps({"loginId":int(interlink_id), "otp":int(otp)})
+        headers = {
+            **self.headers,
+            "Content-Length": str(len(data)),
+            "Content-Type": "application/json"
+        }
         for attempt in range(retries):
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.post(url=url, headers=self.headers, json=payload) as response:
+                    async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                         response.raise_for_status()
                         result = await response.json()
                         return result["data"]["jwtToken"]
@@ -271,7 +282,7 @@ class Interlink:
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers) as response:
+                    async with session.get(url=url, headers=headers, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -291,7 +302,7 @@ class Interlink:
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers) as response:
+                    async with session.get(url=url, headers=headers, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -304,14 +315,16 @@ class Interlink:
         url = f"{self.BASE_API}/token/claim-airdrop"
         headers = {
             **self.headers,
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {token}",
+            "Content-Length": "2",
+            "Content-Type": "application/json"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
             connector = ProxyConnector.from_url(proxy) if proxy else None
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.post(url=url, headers=headers, json={}) as response:
+                    async with session.post(url=url, headers=headers, json={}, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:

@@ -3,13 +3,14 @@ Interlink BOT
 
 - Register Here : [Interlink](https://interlinklabs.ai/referral?refCode=26122003)
 - Download App
-- Scan Face & Connect Wallet
+- Scan Face
+- Connect Wallet
 - Use Code `26122003`
 
 ## Features
 
   - Auto Get Account Information
-  - Auto Run With [Monosans](https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt) Proxy - `Choose 1`
+  - Auto Run With [Proxyscrape Free Proxy](https://proxyscrape.com/free-proxy-list) - `Choose 1`
   - Auto Run With Private Proxy - `Choose 2`
   - Auto Run Without Proxy - `Choose 3`
   - Auto Claim Mining
@@ -36,12 +37,34 @@ Interlink BOT
 
 ## Configuration
 
+- **accounts.json:** You will find the file `accounts.json` inside the project directory. Make sure `accounts.json` contains data that matches the format expected by the script. Here are examples of file formats:
+  ```json
+    [
+        {
+            "Email": "your_email_address_1",
+            "Passcode": "your_passcode",
+            "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
+        },
+        {
+            "Email": "your_email_address_2",
+            "Passcode": "your_passcode",
+            "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
+        }
+    ]
+  ```
+
 - **proxy.txt:** You will find the file `proxy.txt` inside the project directory. Make sure `proxy.txt` contains data that matches the format expected by the script. Here are examples of file formats:
   ```bash
     ip:port # Default Protcol HTTP.
     protocol://ip:port
     protocol://user:pass@ip:port
   ```
+
+## Setup
+
+```bash
+python setup.py #or python3 setup.py
+```
 
 ## Run
 

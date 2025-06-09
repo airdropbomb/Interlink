@@ -21,7 +21,7 @@ class Interlink:
         self.proxies = []
         self.proxy_index = 0
         self.account_proxies = {}
-        self.tokens = {}
+        self.access_tokens = {}
 
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -159,7 +159,7 @@ class Interlink:
         url = f"{self.BASE_API}/token/get-token"
         headers = {
             **self.headers,
-            "Authorization": f"Bearer {self.tokens[email]}"
+            "Authorization": f"Bearer {self.access_tokens[email]}"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
@@ -186,7 +186,7 @@ class Interlink:
         url = f"{self.BASE_API}/token/check-is-claimable"
         headers = {
             **self.headers,
-            "Authorization": f"Bearer {self.tokens[email]}"
+            "Authorization": f"Bearer {self.access_tokens[email]}"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
@@ -213,7 +213,7 @@ class Interlink:
         url = f"{self.BASE_API}/token/claim-airdrop"
         headers = {
             **self.headers,
-            "Authorization": f"Bearer {self.tokens[email]}",
+            "Authorization": f"Bearer {self.access_tokens[email]}",
             "Content-Length": "2",
             "Content-Type": "application/json"
         }
@@ -367,7 +367,7 @@ class Interlink:
                             )
                             continue
 
-                        self.tokens[email] = token
+                        self.access_tokens[email] = token
                         
                         await self.process_accounts(email, use_proxy)
                         await asyncio.sleep(3)

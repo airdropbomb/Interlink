@@ -373,7 +373,7 @@ class Interlink:
                         await asyncio.sleep(3)
 
                 self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*65)
-                seconds = 12 * 60 * 60
+                seconds = 4 * 60 * 60
                 while seconds > 0:
                     formatted_time = self.format_seconds(seconds)
                     print(

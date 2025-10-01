@@ -1,85 +1,194 @@
-# Interlink BOT
-Interlink BOT
+# 🌅 Interlink Validator BOT
 
-- Register Here : [Interlink](https://interlinklabs.ai/referral?refCode=26122003)
-- Download App
-- Scan Face
-- Connect Wallet
-- Use Code `26122003`
+> Automated Mining $ITLG with multi-account and proxy support
 
-## Features
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/vonssy/Interlink-BOT.svg)](https://github.com/vonssy/Interlink-BOT/stargazers)
 
-  - Auto Get Account Information
-  - Auto Run With [Proxyscrape Free Proxy](https://proxyscrape.com/free-proxy-list) - `Choose 1`
-  - Auto Run With Private Proxy - `Choose 2`
-  - Auto Run Without Proxy - `Choose 3`
-  - Auto Claim Mining
-  - Multi Accounts
+## 📋 Table of Contents
 
-## Requiremnets
+- [Overview](#overview)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Setup & Usage](#setup--usage)
+- [Proxy Recommendation](#proxy-recommendation)
+- [Support](#support)
+- [Contributing](#contributing)
 
-- Make sure you have Python3.9 or higher installed and pip.
+## 🎯 Overview
 
-## Instalation
+Interlink BOT is an automated tool designed to mining $ITLG tokens across multiple accounts. It provides seamless offers robust proxy support for enhanced security and reliability.performance.
 
-1. **Clone The Repositories:**
-   ```bash
-   git clone https://github.com/vonssy/Interlink-BOT.git
-   ```
-   ```bash
-   cd Interlink-BOT
-   ```
+**🔗 Get Started:** [Register on Interlink Validator](https://interlinklabs.ai/referral?refCode=26122003)
 
-2. **Install Requirements:**
-   ```bash
-   pip install -r requirements.txt #or pip3 install -r requirements.txt
-   ```
+> **Referral Code:** Use code `26122003` during registration for benefits!
 
-## Configuration
+## ✨ Features
 
-- **accounts.json:** You will find the file `accounts.json` inside the project directory. Make sure `accounts.json` contains data that matches the format expected by the script. Here are examples of file formats:
-  ```json
-    [
-        {
-            "Email": "your_email_address_1",
-            "Passcode": "your_passcode",
-            "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
-        },
-        {
-            "Email": "your_email_address_2",
-            "Passcode": "your_passcode",
-            "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
-        }
-    ]
-  ```
+- 🔄 **Automated Account Management** - Retrieve account information automatically
+- 🌐 **Flexible Proxy Support** - Run with or without proxy configuration
+- 🔀 **Smart Proxy Rotation** - Automatic rotation of invalid proxies
+- ⛏️ **Mining $ITLG Tokens** - Automated claim $ITLG tokens every 4 hours
+- 👥 **Multi-Account Support** - Manage multiple accounts simultaneously
 
-- **proxy.txt:** You will find the file `proxy.txt` inside the project directory. Make sure `proxy.txt` contains data that matches the format expected by the script. Here are examples of file formats:
-  ```bash
-    ip:port # Default Protcol HTTP.
-    protocol://ip:port
-    protocol://user:pass@ip:port
-  ```
+## 📋 Requirements
 
-## Setup
+- **Python:** Version 3.9 or higher
+- **pip:** Latest version recommended
+
+## 🛠 Installation
+
+### 1. Clone the Repository
 
 ```bash
-python setup.py #or python3 setup.py
+git clone https://github.com/vonssy/Interlink-BOT.git
+cd Interlink-BOT
 ```
 
-## Run
+### 2. Install Dependencies
 
 ```bash
-python bot.py #or python3 bot.py
+pip install -r requirements.txt
+# or for Python 3 specifically
+pip3 install -r requirements.txt
 ```
 
-## Buy Me a Coffee
+## ⚙️ Configuration
 
-- **EVM:** 0xe3c9ef9a39e9eb0582e5b147026cae524338521a
-- **TON:** UQBEFv58DC4FUrGqinBB5PAQS7TzXSm5c1Fn6nkiet8kmehB
-- **SOL:** E1xkaJYmAFEj28NPHKhjbf7GcvfdjKdvXju8d8AeSunf
-- **SUI:** 0xa03726ecbbe00b31df6a61d7a59d02a7eedc39fe269532ceab97852a04cf3347
+### Account Configuration
 
-Thank you for visiting this repository, don't forget to contribute in the form of follows and stars.
-If you have questions, find an issue, or have suggestions for improvement, feel free to contact me or open an *issue* in this GitHub repository.
+Create or edit `accounts.josn` in the project directory:
 
-**vonssy**
+```json
+[
+    {
+        "email": "your_email_address_1",
+        "passcode": "your_passcode",
+        "interlinkId": "your_interlink_id ( without xxxx@, only number )"
+    },
+    {
+        "email": "your_email_address_2",
+        "passcode": "your_passcode",
+        "interlinkId": "your_interlink_id ( without xxxx@, only number )"
+    }
+]
+```
+
+### Proxy Configuration (Optional)
+
+Create or edit `proxy.txt` in the project directory:
+
+```
+# Simple format (HTTP protocol by default)
+192.168.1.1:8080
+
+# With protocol specification
+http://192.168.1.1:8080
+https://192.168.1.1:8080
+
+# With authentication
+http://username:password@192.168.1.1:8080
+```
+
+## 🚀 Setup & Usage
+
+### Automatic Token Setup
+
+Run the setup script to automatically fetch tokens using your configured account credentials:
+
+```bash
+python setup.py
+# or for Python 3 specifically
+python3 setup.py
+```
+
+> **💡 What does setup.py do?**
+> - Automatically logs in to your Interlink App accounts
+> - Extracts bearer tokens automatically
+> - Saves tokens to `tokens.json` for the bot to use
+
+### Start the Bot
+
+After running the setup, launch the Interlink BOT:
+
+```bash
+python bot.py
+# or for Python 3 specifically
+python3 bot.py
+```
+
+### Runtime Options
+
+When starting the bot, you'll be prompted to choose:
+
+1. **Proxy Mode Selection:**
+   - Option `1`: Run with proxy
+   - Option `2`: Run without proxy
+
+2. **Auto-Rotation:** 
+   - `y`: Enable automatic invalid proxy rotation
+   - `n`: Disable auto-rotation
+
+## 🌐 Proxy Recommendation
+
+<div align="left">
+  <img src="images/banner.png" alt="NST Proxy Banner" width="300">
+</div>
+
+For reliable multi-wallet automation and geo-restriction bypass, we recommend **Nstproxy**:
+
+### Why Nstproxy?
+- 💰 **Affordable pricing** starting from $0.1/GB
+- 🌍 **Global coverage** with multiple locations
+- 🔄 **Advanced rotation control**
+- 🛡️ **Anti-ban technology**
+
+### Get Started with Nstproxy
+- 🔗 **Website:** [Nstproxy.com](https://www.nstproxy.com/?utm_source=vonssy)
+- 💬 **Telegram:** [@nstproxy](https://t.me/nstproxy)
+- 🎮 **Discord:** [Join Server](https://discord.gg/5jjWCAmvng)
+- 📚 **GitHub:** [Nstproxy Repository](https://github.com/Nstproxy)
+
+> 🎁 **Special Offer:** Use code `VONSSY` for **10% OFF** your first purchase!
+
+## 💖 Support the Project
+
+If this project has been helpful to you, consider supporting its development:
+
+### Cryptocurrency Donations
+
+| Network | Address |
+|---------|---------|
+| **EVM** | `0xe3c9ef9a39e9eb0582e5b147026cae524338521a` |
+| **TON** | `UQBEFv58DC4FUrGqinBB5PAQS7TzXSm5c1Fn6nkiet8kmehB` |
+| **SOL** | `E1xkaJYmAFEj28NPHKhjbf7GcvfdjKdvXju8d8AeSunf` |
+| **SUI** | `0xa03726ecbbe00b31df6a61d7a59d02a7eedc39fe269532ceab97852a04cf3347` |
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Here's how you can help:
+
+1. ⭐ **Star this repository** if you find it useful
+2. 👥 **Follow** for updates on new features
+3. 🐛 **Report issues** via GitHub Issues
+4. 💡 **Suggest improvements** or new features
+5. 🔧 **Submit pull requests** for bug fixes or enhancements
+
+## 📞 Contact & Support
+
+- **Developer:** vonssy
+- **Issues:** [GitHub Issues](https://github.com/vonssy/Interlink-BOT/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/vonssy/Interlink-BOT/discussions)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [vonssy](https://github.com/vonssy)**
+
+*Thank you for using Interlink Validator BOT! Don't forget to ⭐ star this repository.*
+
+</div>

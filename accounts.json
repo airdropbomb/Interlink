@@ -1,12 +1,12 @@
 [
     {
-        "Email": "your_email_address_1",
-        "Passcode": "your_passcode",
-        "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
+        "email": "your_email_address_1",
+        "passcode": "your_passcode",
+        "interlinkId": "your_interlink_id ( without xxxx@, only number )"
     },
     {
-        "Email": "your_email_address_2",
-        "Passcode": "your_passcode",
-        "InterlinkId": "your_interlink_id ( without xxxx@, only number )"
+        "email": "your_email_address_2",
+        "passcode": "your_passcode",
+        "interlinkId": "your_interlink_id ( without xxxx@, only number )"
     }
 ]

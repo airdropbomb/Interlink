@@ -1,18 +1,20 @@
 from aiohttp import (
     ClientResponseError,
     ClientSession,
-    ClientTimeout
+    ClientTimeout,
+    BasicAuth
 )
 from aiohttp_socks import ProxyConnector
+from base64 import urlsafe_b64decode
 from datetime import datetime
 from colorama import *
-import asyncio, base64, time, json, os, pytz
+import asyncio, time, json, pytz, re, os
 
 wib = pytz.timezone('Asia/Jakarta')
 
 class Interlink:
     def __init__(self) -> None:
-        self.headers = {
+        self.HEADERS = {
             "Accept-Encoding": "*/*",
             "User-Agent": "okhttp/4.12.0",
             "Accept-Encoding": "gzip"
@@ -63,23 +65,14 @@ class Interlink:
         except json.JSONDecodeError:
             return []
     
-    async def load_proxies(self, use_proxy_choice: int):
+    async def load_proxies(self):
         filename = "proxy.txt"
         try:
-            if use_proxy_choice == 1:
-                async with ClientSession(timeout=ClientTimeout(total=30)) as session:
-                    async with session.get("https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=text") as response:
-                        response.raise_for_status()
-                        content = await response.text()
-                        with open(filename, 'w') as f:
-                            f.write(content)
-                        self.proxies = [line.strip() for line in content.splitlines() if line.strip()]
-            else:
-                if not os.path.exists(filename):
-                    self.log(f"{Fore.RED + Style.BRIGHT}File {filename} Not Found.{Style.RESET_ALL}")
-                    return
-                with open(filename, 'r') as f:
-                    self.proxies = [line.strip() for line in f.read().splitlines() if line.strip()]
+            if not os.path.exists(filename):
+                self.log(f"{Fore.RED + Style.BRIGHT}File {filename} Not Found.{Style.RESET_ALL}")
+                return
+            with open(filename, 'r') as f:
+                self.proxies = [line.strip() for line in f.read().splitlines() if line.strip()]
             
             if not self.proxies:
                 self.log(f"{Fore.RED + Style.BRIGHT}No Proxies Found.{Style.RESET_ALL}")
@@ -100,27 +93,47 @@ class Interlink:
             return proxies
         return f"http://{proxies}"
 
-    def get_next_proxy_for_account(self, token):
-        if token not in self.account_proxies:
+    def get_next_proxy_for_account(self, account):
+        if account not in self.account_proxies:
             if not self.proxies:
                 return None
             proxy = self.check_proxy_schemes(self.proxies[self.proxy_index])
-            self.account_proxies[token] = proxy
+            self.account_proxies[account] = proxy
             self.proxy_index = (self.proxy_index + 1) % len(self.proxies)
-        return self.account_proxies[token]
+        return self.account_proxies[account]
 
-    def rotate_proxy_for_account(self, token):
+    def rotate_proxy_for_account(self, account):
         if not self.proxies:
             return None
         proxy = self.check_proxy_schemes(self.proxies[self.proxy_index])
-        self.account_proxies[token] = proxy
+        self.account_proxies[account] = proxy
         self.proxy_index = (self.proxy_index + 1) % len(self.proxies)
         return proxy
+    
+    def build_proxy_config(self, proxy=None):
+        if not proxy:
+            return None, None, None
+
+        if proxy.startswith("socks"):
+            connector = ProxyConnector.from_url(proxy)
+            return connector, None, None
+
+        elif proxy.startswith("http"):
+            match = re.match(r"http://(.*?):(.*?)@(.*)", proxy)
+            if match:
+                username, password, host_port = match.groups()
+                clean_url = f"http://{host_port}"
+                auth = BasicAuth(username, password)
+                return None, clean_url, auth
+            else:
+                return None, proxy, None
+
+        raise Exception("Unsupported Proxy Type.")
     
     def decode_token(self, token: str):
         try:
             header, payload, signature = token.split(".")
-            decoded_payload = base64.urlsafe_b64decode(payload + "==").decode("utf-8")
+            decoded_payload = urlsafe_b64decode(payload + "==").decode("utf-8")
             parsed_payload = json.loads(decoded_payload)
             exp_time = parsed_payload["exp"]
             
@@ -133,40 +146,66 @@ class Interlink:
             local, domain = account.split('@', 1)
             mask_account = local[:3] + '*' * 3 + local[-3:]
             return f"{mask_account}@{domain}"
-        
+
     def print_question(self):
         while True:
             try:
-                print(f"{Fore.WHITE + Style.BRIGHT}1. Run With Proxyscrape Free Proxy{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}2. Run With Private Proxy{Style.RESET_ALL}")
-                print(f"{Fore.WHITE + Style.BRIGHT}3. Run Without Proxy{Style.RESET_ALL}")
-                choose = int(input(f"{Fore.BLUE + Style.BRIGHT}Choose [1/2/3] -> {Style.RESET_ALL}").strip())
+                print(f"{Fore.WHITE + Style.BRIGHT}1. Run With Proxy{Style.RESET_ALL}")
+                print(f"{Fore.WHITE + Style.BRIGHT}2. Run Without Proxy{Style.RESET_ALL}")
+                proxy_choice = int(input(f"{Fore.BLUE + Style.BRIGHT}Choose [1/2] -> {Style.RESET_ALL}").strip())
 
-                if choose in [1, 2, 3]:
+                if proxy_choice in [1, 2]:
                     proxy_type = (
-                        "With Proxyscrape Free" if choose == 1 else 
-                        "With Private" if choose == 2 else 
+                        "With" if proxy_choice == 1 else 
                         "Without"
                     )
                     print(f"{Fore.GREEN + Style.BRIGHT}Run {proxy_type} Proxy Selected.{Style.RESET_ALL}")
-                    return choose
+                    break
                 else:
-                    print(f"{Fore.RED + Style.BRIGHT}Please enter either 1, 2 or 3.{Style.RESET_ALL}")
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter either 1  or 2.{Style.RESET_ALL}")
             except ValueError:
-                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number (1, 2 or 3).{Style.RESET_ALL}")
-            
-    async def token_balance(self, email: str, proxy=None, retries=5):
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number (1  or 2).{Style.RESET_ALL}")
+
+        rotate_proxy = False
+        if proxy_choice == 1:
+            while True:
+                rotate_proxy = input(f"{Fore.BLUE + Style.BRIGHT}Rotate Invalid Proxy? [y/n] -> {Style.RESET_ALL}").strip()
+                if rotate_proxy in ["y", "n"]:
+                    rotate_proxy = rotate_proxy == "y"
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter 'y' or 'n'.{Style.RESET_ALL}")
+
+        return proxy_choice, rotate_proxy
+    
+    async def check_connection(self, proxy_url=None):
+        connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
+        try:
+            async with ClientSession(connector=connector, timeout=ClientTimeout(total=10)) as session:
+                async with session.get(url="https://api.ipify.org?format=json", proxy=proxy, proxy_auth=proxy_auth) as response:
+                    response.raise_for_status()
+                    return True
+        except (Exception, ClientResponseError) as e:
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}Status :{Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Connection Not 200 OK {Style.RESET_ALL}"
+                f"{Fore.MAGENTA+Style.BRIGHT}-{Style.RESET_ALL}"
+                f"{Fore.YELLOW+Style.BRIGHT} {str(e)} {Style.RESET_ALL}"
+            )
+            return None
+    
+    async def token_balance(self, email: str, proxy_url=None, retries=5):
         url = f"{self.BASE_API}/token/get-token"
         headers = {
-            **self.headers,
+            **self.HEADERS,
             "Authorization": f"Bearer {self.access_tokens[email]}"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
-            connector = ProxyConnector.from_url(proxy) if proxy else None
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers, ssl=False) as response:
+                    async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -182,18 +221,18 @@ class Interlink:
 
         return None
             
-    async def claimable_check(self, email: str, proxy=None, retries=5):
+    async def claimable_check(self, email: str, proxy_url=None, retries=5):
         url = f"{self.BASE_API}/token/check-is-claimable"
         headers = {
-            **self.headers,
+            **self.HEADERS,
             "Authorization": f"Bearer {self.access_tokens[email]}"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
-            connector = ProxyConnector.from_url(proxy) if proxy else None
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.get(url=url, headers=headers, ssl=False) as response:
+                    async with session.get(url=url, headers=headers, proxy=proxy, proxy_auth=proxy_auth, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -209,20 +248,20 @@ class Interlink:
 
         return None
             
-    async def claim_airdrop(self, email: str, proxy=None, retries=1):
+    async def claim_airdrop(self, email: str, proxy_url=None, retries=1):
         url = f"{self.BASE_API}/token/claim-airdrop"
         headers = {
-            **self.headers,
+            **self.HEADERS,
             "Authorization": f"Bearer {self.access_tokens[email]}",
             "Content-Length": "2",
             "Content-Type": "application/json"
         }
         await asyncio.sleep(3)
         for attempt in range(retries):
-            connector = ProxyConnector.from_url(proxy) if proxy else None
+            connector, proxy, proxy_auth = self.build_proxy_config(proxy_url)
             try:
                 async with ClientSession(connector=connector, timeout=ClientTimeout(total=60)) as session:
-                    async with session.post(url=url, headers=headers, json={}, ssl=False) as response:
+                    async with session.post(url=url, headers=headers, json={}, proxy=proxy, proxy_auth=proxy_auth, ssl=False) as response:
                         response.raise_for_status()
                         return await response.json()
             except (Exception, ClientResponseError) as e:
@@ -237,20 +276,37 @@ class Interlink:
                 )
 
         return None
+    
+    async def process_check_connection(self, email: str, use_proxy: bool, rotate_proxy: bool):
+        while True:
+            proxy = self.get_next_proxy_for_account(email) if use_proxy else None
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}Proxy  :{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {proxy if proxy else 'No Proxy'} {Style.RESET_ALL}"
+            )
+
+            is_valid = await self.check_connection(proxy)
+            if is_valid: return True
             
-    async def process_accounts(self, email: str, use_proxy: bool):
+            if rotate_proxy:
+                proxy = self.rotate_proxy_for_account(email)
+                await asyncio.sleep(1)
+                continue
+
+            return False
+            
+    async def process_accounts(self, email: str, use_proxy: bool, rotate_proxy: bool):
+        is_valid = await self.process_check_connection(email, use_proxy, rotate_proxy)
+        if not is_valid: return
+
         proxy = self.get_next_proxy_for_account(email) if use_proxy else None
-        self.log(
-            f"{Fore.CYAN+Style.BRIGHT}Proxy  :{Style.RESET_ALL}"
-            f"{Fore.WHITE+Style.BRIGHT} {proxy} {Style.RESET_ALL}"
-        )
 
         balance = await self.token_balance(email, proxy)
         if balance:
-            token_balance = balance.get("data", {}).get("interlinkTokenAmount") or "N/A"
-            silver_balance = balance.get("data", {}).get("interlinkSilverTokenAmount") or "N/A"
-            gold_balance = balance.get("data", {}).get("interlinkGoldTokenAmount") or "N/A"
-            diamond_balance = balance.get("data", {}).get("interlinkDiamondTokenAmount") or "N/A"
+            token_balance = balance.get("data", {}).get("interlinkTokenAmount", 0)
+            silver_balance = balance.get("data", {}).get("interlinkSilverTokenAmount", 0)
+            gold_balance = balance.get("data", {}).get("interlinkGoldTokenAmount", 0)
+            diamond_balance = balance.get("data", {}).get("interlinkDiamondTokenAmount", 0)
 
             self.log(f"{Fore.CYAN+Style.BRIGHT}Balance:{Style.RESET_ALL}")
             self.log(
@@ -310,13 +366,9 @@ class Interlink:
                 self.log(f"{Fore.RED}No Accounts Loaded.{Style.RESET_ALL}")
                 return
 
-            use_proxy_choice = self.print_question()
+            proxy_choice, rotate_proxy = self.print_question()
 
             while True:
-                use_proxy = False
-                if use_proxy_choice in [1, 2]:
-                    use_proxy = True
-
                 self.clear_terminal()
                 self.welcome()
                 self.log(
@@ -324,14 +376,15 @@ class Interlink:
                     f"{Fore.WHITE + Style.BRIGHT}{len(accounts)}{Style.RESET_ALL}"
                 )
 
+                use_proxy = True if proxy_choice == 1 else False
                 if use_proxy:
-                    await self.load_proxies(use_proxy_choice)
+                    await self.load_proxies()
         
                 separator = "=" * 27
                 for idx, account in enumerate(accounts, start=1):
                     if account:
-                        email = account["Email"]
-                        token = account["Token"]
+                        email = account["email"]
+                        token = account["token"]
                         self.log(
                             f"{Fore.CYAN + Style.BRIGHT}{separator}[{Style.RESET_ALL}"
                             f"{Fore.WHITE + Style.BRIGHT} {idx} {Style.RESET_ALL}"
@@ -369,7 +422,7 @@ class Interlink:
 
                         self.access_tokens[email] = token
                         
-                        await self.process_accounts(email, use_proxy)
+                        await self.process_accounts(email, use_proxy, rotate_proxy)
                         await asyncio.sleep(3)
 
                 self.log(f"{Fore.CYAN + Style.BRIGHT}={Style.RESET_ALL}"*65)

@@ -1,4 +1,4 @@
-# 🌅 Interlink Validator BOT
+# 🌅 Interlink BOT
 
 > Automated Mining $ITLG with multi-account and proxy support
 

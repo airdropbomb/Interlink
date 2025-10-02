@@ -24,7 +24,7 @@ Interlink BOT is an automated tool designed to mining $ITLG tokens across multip
 
 **🔗 Get Started:** [Register on Interlink Validator](https://interlinklabs.ai/referral?refCode=162325)
 
-> **Referral Code:** Use code `26122003` during registration for benefits!
+> **Referral Code:** Use code `162325` during registration for benefits!
 
 ## ✨ Features
 
